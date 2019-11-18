@@ -7,8 +7,17 @@
     android:background="@color/gray"
     tools:context=".ChessActivity">
 
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="@color/dark_gray"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/guideline_h18"
+        app:layout_constraintBottom_toTopOf="@+id/guideline_h79"/>
+
     <GridLayout
-        android:id="@+id/gridLayout2"
+        android:id="@+id/GridBackground"
         android:layout_width="280dp"
         android:layout_height="280dp"
         android:columnCount="8"
@@ -409,7 +418,7 @@
     </GridLayout>
 
     <GridLayout
-        android:id="@+id/gridLayout"
+        android:id="@+id/GridBoard"
         android:layout_width="280dp"
         android:layout_height="280dp"
         android:columnCount="8"

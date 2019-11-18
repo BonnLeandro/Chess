@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.GridLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -36,6 +37,8 @@ public class ChessActivity extends AppCompatActivity
     private ImageView ImageView_profile_flag;
     private Button Button_draw;
     private Button Button_surrender;
+    private GridLayout GridBackground;
+    private GridLayout GridBoard;
 
     // tablero
     public Board board = new Board();
@@ -77,7 +80,17 @@ public class ChessActivity extends AppCompatActivity
         Button_draw = (Button) findViewById(R.id.Button_draw);
         Button_surrender = (Button) findViewById(R.id.Button_surrender);
 
+        GridBackground = (GridLayout) findViewById(R.id.GridBackground);
+        GridBoard = (GridLayout) findViewById(R.id.GridBoard);
+
         initializeBoard();
+
+        // ajusto el tamaño del tablero al dispositivo
+        int height = this.getResources().getDisplayMetrics().heightPixels*60/100;
+        int width = this.getResources().getDisplayMetrics().widthPixels/10;
+
+        //GridBackground.layout();
+
 
 
 
@@ -86,17 +99,16 @@ public class ChessActivity extends AppCompatActivity
         TextView_oponent_name.setText("leandro ariel bonn");
         TextView_oponent_elo.setText( "1206" );
         TextView_oponent_timer.setText("10:51" );
-        TextView_profile_name.setText( "profile_name" );
+        TextView_profile_name.setText( "franco kenji" );
         TextView_profile_elo.setText( "1210" );
         TextView_profile_timer.setText( "12:24" );
 
-
-
+        ImageView_profile_image.setImageDrawable(getDrawable(R.drawable.bking));
+        ImageView_oponent_image.setImageDrawable(getDrawable(R.drawable.wking));
 
         /*
         Librería de iconos de banderas: https://github.com/WANGjieJacques/flagkit
          */
-
         ImageView_profile_flag.setImageDrawable(FlagKit.drawableWithFlag(ChessActivity.this, "ar"));
         ImageView_oponent_flag.setImageDrawable(FlagKit.drawableWithFlag(ChessActivity.this, "ar"));
     }
@@ -253,28 +265,42 @@ public class ChessActivity extends AppCompatActivity
         // imprime en pantalla las piezas almacenadas en "Board"
         Piece p;
 
-        for (int i = 0; i < 8; i++)
+        my_color = board.getSideToMove();
+
+        for (int row = 0; row < 8; row++)
         {
-            for (int j = 0; j < 8; j++)
+            for (int col = 0; col < 8; col++)
             {
                 // obtengo la pieza y la muestro
-                p = board.getPiece(Square.squareAt(8*i+j));
+                if (my_color == Side.WHITE)     p = board.getPiece(Square.squareAt(8 * row + col));
+                else                            p = board.getPiece(Square.squareAt(SQUARES_QUANTITY - 1 - 8 * row - col));
 
+                if (p == Piece.NONE) DisplayBoard[row][col].setBackgroundResource(0);
 
-                if (p == Piece.NONE)                DisplayBoard[i][j].setBackgroundResource(0);
-
-                else if (p == Piece.BLACK_PAWN)     DisplayBoard[i][j].setBackgroundResource(R.drawable.bpawn);
-                else if (p == Piece.WHITE_PAWN)     DisplayBoard[i][j].setBackgroundResource(R.drawable.wpawn);
-                else if (p == Piece.BLACK_KNIGHT)   DisplayBoard[i][j].setBackgroundResource(R.drawable.bknight);
-                else if (p == Piece.WHITE_KNIGHT)   DisplayBoard[i][j].setBackgroundResource(R.drawable.wknight);
-                else if (p == Piece.BLACK_BISHOP)   DisplayBoard[i][j].setBackgroundResource(R.drawable.bbishop);
-                else if (p == Piece.WHITE_BISHOP)   DisplayBoard[i][j].setBackgroundResource(R.drawable.wbishop);
-                else if (p == Piece.BLACK_ROOK)     DisplayBoard[i][j].setBackgroundResource(R.drawable.brook);
-                else if (p == Piece.WHITE_ROOK)     DisplayBoard[i][j].setBackgroundResource(R.drawable.wrook);
-                else if (p == Piece.BLACK_KING)     DisplayBoard[i][j].setBackgroundResource(R.drawable.bking);
-                else if (p == Piece.WHITE_KING)     DisplayBoard[i][j].setBackgroundResource(R.drawable.wking);
-                else if (p == Piece.BLACK_QUEEN)    DisplayBoard[i][j].setBackgroundResource(R.drawable.bqueen);
-                else if (p == Piece.WHITE_QUEEN)    DisplayBoard[i][j].setBackgroundResource(R.drawable.wqueen);
+                else if (p == Piece.BLACK_PAWN)
+                    DisplayBoard[row][col].setBackgroundResource(R.drawable.bpawn);
+                else if (p == Piece.WHITE_PAWN)
+                    DisplayBoard[row][col].setBackgroundResource(R.drawable.wpawn);
+                else if (p == Piece.BLACK_KNIGHT)
+                    DisplayBoard[row][col].setBackgroundResource(R.drawable.bknight);
+                else if (p == Piece.WHITE_KNIGHT)
+                    DisplayBoard[row][col].setBackgroundResource(R.drawable.wknight);
+                else if (p == Piece.BLACK_BISHOP)
+                    DisplayBoard[row][col].setBackgroundResource(R.drawable.bbishop);
+                else if (p == Piece.WHITE_BISHOP)
+                    DisplayBoard[row][col].setBackgroundResource(R.drawable.wbishop);
+                else if (p == Piece.BLACK_ROOK)
+                    DisplayBoard[row][col].setBackgroundResource(R.drawable.brook);
+                else if (p == Piece.WHITE_ROOK)
+                    DisplayBoard[row][col].setBackgroundResource(R.drawable.wrook);
+                else if (p == Piece.BLACK_KING)
+                    DisplayBoard[row][col].setBackgroundResource(R.drawable.bking);
+                else if (p == Piece.WHITE_KING)
+                    DisplayBoard[row][col].setBackgroundResource(R.drawable.wking);
+                else if (p == Piece.BLACK_QUEEN)
+                    DisplayBoard[row][col].setBackgroundResource(R.drawable.bqueen);
+                else if (p == Piece.WHITE_QUEEN)
+                    DisplayBoard[row][col].setBackgroundResource(R.drawable.wqueen);
             }
         }
 
@@ -287,207 +313,272 @@ public class ChessActivity extends AppCompatActivity
     public void onClick(View v)
     {
         // lectura de los clicks de las casillas y procesamiento
+        my_color = board.getSideToMove();
 
         switch (v.getId())
         {
             case R.id.R00:
-                square_to = Square.A8;
+                if (my_color == Side.WHITE)     square_to = Square.A8;
+                else                            square_to = Square.H1;
                 break;
             case R.id.R01:
-                square_to = Square.B8;
+                if (my_color == Side.WHITE)     square_to = Square.B8;
+                else                            square_to = Square.G1;
                 break;
             case R.id.R02:
-                square_to = Square.C8;
+                if (my_color == Side.WHITE)     square_to = Square.C8;
+                else                            square_to = Square.F1;
                 break;
             case R.id.R03:
-                square_to = Square.D8;
+                if (my_color == Side.WHITE)     square_to = Square.D8;
+                else                            square_to = Square.E1;
                 break;
             case R.id.R04:
-                square_to = Square.E8;
+                if (my_color == Side.WHITE)     square_to = Square.E8;
+                else                            square_to = Square.D1;
                 break;
             case R.id.R05:
-                square_to = Square.F8;
+                if (my_color == Side.WHITE)     square_to = Square.F8;
+                else                            square_to = Square.C1;
                 break;
             case R.id.R06:
-                square_to = Square.G8;
+                if (my_color == Side.WHITE)     square_to = Square.G8;
+                else                            square_to = Square.B1;
                 break;
             case R.id.R07:
-                square_to = Square.H8;
+                if (my_color == Side.WHITE)     square_to = Square.H8;
+                else                            square_to = Square.A1;
                 break;
 
             case R.id.R10:
-                square_to = Square.A7;
+                if (my_color == Side.WHITE)     square_to = Square.A7;
+                else                            square_to = Square.H2;
                 break;
             case R.id.R11:
-                square_to = Square.B7;
+                if (my_color == Side.WHITE)     square_to = Square.B7;
+                else                            square_to = Square.G2;
                 break;
             case R.id.R12:
-                square_to = Square.C7;
+                if (my_color == Side.WHITE)     square_to = Square.C7;
+                else                            square_to = Square.F2;
                 break;
             case R.id.R13:
-                square_to = Square.D7;
+                if (my_color == Side.WHITE)     square_to = Square.D7;
+                else                            square_to = Square.E2;
                 break;
             case R.id.R14:
-                square_to = Square.E7;
+                if (my_color == Side.WHITE)     square_to = Square.E7;
+                else                            square_to = Square.D2;
                 break;
             case R.id.R15:
-                square_to = Square.F7;
+                if (my_color == Side.WHITE)     square_to = Square.F7;
+                else                            square_to = Square.C2;
                 break;
             case R.id.R16:
-                square_to = Square.G7;
+                if (my_color == Side.WHITE)     square_to = Square.G7;
+                else                            square_to = Square.B2;
                 break;
             case R.id.R17:
-                square_to = Square.H7;
+                if (my_color == Side.WHITE)     square_to = Square.H7;
+                else                            square_to = Square.A2;
                 break;
 
             case R.id.R20:
-                square_to = Square.A6;
+                if (my_color == Side.WHITE)     square_to = Square.A6;
+                else                            square_to = Square.H3;
                 break;
             case R.id.R21:
-                square_to = Square.B6;
+                if (my_color == Side.WHITE)     square_to = Square.B6;
+                else                            square_to = Square.G3;
                 break;
             case R.id.R22:
-                square_to = Square.C6;
+                if (my_color == Side.WHITE)     square_to = Square.C6;
+                else                            square_to = Square.F3;
                 break;
             case R.id.R23:
-                square_to = Square.D6;
+                if (my_color == Side.WHITE)     square_to = Square.D6;
+                else                            square_to = Square.E3;
                 break;
             case R.id.R24:
-                square_to = Square.E6;
+                if (my_color == Side.WHITE)     square_to = Square.E6;
+                else                            square_to = Square.D3;
                 break;
             case R.id.R25:
-                square_to = Square.F6;
+                if (my_color == Side.WHITE)     square_to = Square.F6;
+                else                            square_to = Square.C3;
                 break;
             case R.id.R26:
-                square_to = Square.G6;
+                if (my_color == Side.WHITE)     square_to = Square.G6;
+                else                            square_to = Square.B3;
                 break;
             case R.id.R27:
-                square_to = Square.H6;
+                if (my_color == Side.WHITE)     square_to = Square.H6;
+                else                            square_to = Square.A3;
                 break;
 
             case R.id.R30:
-                square_to = Square.A5;
+                if (my_color == Side.WHITE)     square_to = Square.A5;
+                else                            square_to = Square.H4;
                 break;
             case R.id.R31:
-                square_to = Square.B5;
+                if (my_color == Side.WHITE)     square_to = Square.B5;
+                else                            square_to = Square.G4;
                 break;
             case R.id.R32:
-                square_to = Square.C5;
+                if (my_color == Side.WHITE)     square_to = Square.C5;
+                else                            square_to = Square.F4;
                 break;
             case R.id.R33:
-                square_to = Square.D5;
+                if (my_color == Side.WHITE)     square_to = Square.D5;
+                else                            square_to = Square.E4;
                 break;
             case R.id.R34:
-                square_to = Square.E5;
+                if (my_color == Side.WHITE)     square_to = Square.E5;
+                else                            square_to = Square.D4;
                 break;
             case R.id.R35:
-                square_to = Square.F5;
+                if (my_color == Side.WHITE)     square_to = Square.F5;
+                else                            square_to = Square.C4;
                 break;
             case R.id.R36:
-                square_to = Square.G5;
+                if (my_color == Side.WHITE)     square_to = Square.G5;
+                else                            square_to = Square.B4;
                 break;
             case R.id.R37:
-                square_to = Square.H5;
+                if (my_color == Side.WHITE)     square_to = Square.H5;
+                else                            square_to = Square.A4;
                 break;
 
             case R.id.R40:
-                square_to = Square.A4;
+                if (my_color == Side.WHITE)     square_to = Square.A4;
+                else                            square_to = Square.H5;
                 break;
             case R.id.R41:
-                square_to = Square.B4;
+                if (my_color == Side.WHITE)     square_to = Square.B4;
+                else                            square_to = Square.G5;
                 break;
             case R.id.R42:
-                square_to = Square.C4;
+                if (my_color == Side.WHITE)     square_to = Square.C4;
+                else                            square_to = Square.F5;
                 break;
             case R.id.R43:
-                square_to = Square.D4;
+                if (my_color == Side.WHITE)     square_to = Square.D4;
+                else                            square_to = Square.E5;
                 break;
             case R.id.R44:
-                square_to = Square.E4;
+                if (my_color == Side.WHITE)     square_to = Square.E4;
+                else                            square_to = Square.D5;
                 break;
             case R.id.R45:
-                square_to = Square.F4;
+                if (my_color == Side.WHITE)     square_to = Square.F4;
+                else                            square_to = Square.C5;
                 break;
             case R.id.R46:
-                square_to = Square.G4;
+                if (my_color == Side.WHITE)     square_to = Square.G4;
+                else                            square_to = Square.B5;
                 break;
             case R.id.R47:
-                square_to = Square.H4;
+                if (my_color == Side.WHITE)     square_to = Square.H4;
+                else                            square_to = Square.A5;
                 break;
 
             case R.id.R50:
-                square_to = Square.A3;
+                if (my_color == Side.WHITE)     square_to = Square.A3;
+                else                            square_to = Square.H6;
                 break;
             case R.id.R51:
-                square_to = Square.B3;
+                if (my_color == Side.WHITE)     square_to = Square.B3;
+                else                            square_to = Square.G6;
                 break;
             case R.id.R52:
-                square_to = Square.C3;
+                if (my_color == Side.WHITE)     square_to = Square.C3;
+                else                            square_to = Square.F6;
                 break;
             case R.id.R53:
-                square_to = Square.D3;
+                if (my_color == Side.WHITE)     square_to = Square.D3;
+                else                            square_to = Square.E6;
                 break;
             case R.id.R54:
-                square_to = Square.E3;
+                if (my_color == Side.WHITE)     square_to = Square.E3;
+                else                            square_to = Square.D6;
                 break;
             case R.id.R55:
-                square_to = Square.F3;
+                if (my_color == Side.WHITE)     square_to = Square.F3;
+                else                            square_to = Square.C6;
                 break;
             case R.id.R56:
-                square_to = Square.G3;
+                if (my_color == Side.WHITE)     square_to = Square.G3;
+                else                            square_to = Square.B6;
                 break;
             case R.id.R57:
-                square_to = Square.H3;
+                if (my_color == Side.WHITE)     square_to = Square.H3;
+                else                            square_to = Square.A6;
                 break;
 
             case R.id.R60:
-                square_to = Square.A2;
+                if (my_color == Side.WHITE)     square_to = Square.A2;
+                else                            square_to = Square.H7;
                 break;
             case R.id.R61:
-                square_to = Square.B2;
+                if (my_color == Side.WHITE)     square_to = Square.B2;
+                else                            square_to = Square.G7;
                 break;
             case R.id.R62:
-                square_to = Square.C2;
+                if (my_color == Side.WHITE)     square_to = Square.C2;
+                else                            square_to = Square.F7;
                 break;
             case R.id.R63:
-                square_to = Square.D2;
+                if (my_color == Side.WHITE)     square_to = Square.D2;
+                else                            square_to = Square.E7;
                 break;
             case R.id.R64:
-                square_to = Square.E2;
+                if (my_color == Side.WHITE)     square_to = Square.E2;
+                else                            square_to = Square.D7;
                 break;
             case R.id.R65:
-                square_to = Square.F2;
+                if (my_color == Side.WHITE)     square_to = Square.F2;
+                else                            square_to = Square.C7;
                 break;
             case R.id.R66:
-                square_to = Square.G2;
+                if (my_color == Side.WHITE)     square_to = Square.G2;
+                else                            square_to = Square.B7;
                 break;
             case R.id.R67:
-                square_to = Square.H2;
+                if (my_color == Side.WHITE)     square_to = Square.H2;
+                else                            square_to = Square.A7;
                 break;
 
             case R.id.R70:
-                square_to = Square.A1;
+                if (my_color == Side.WHITE)     square_to = Square.A1;
+                else                            square_to = Square.H8;
                 break;
             case R.id.R71:
-                square_to = Square.B1;
+                if (my_color == Side.WHITE)     square_to = Square.B1;
+                else                            square_to = Square.G8;
                 break;
             case R.id.R72:
-                square_to = Square.C1;
+                if (my_color == Side.WHITE)     square_to = Square.C1;
+                else                            square_to = Square.F8;
                 break;
             case R.id.R73:
-                square_to = Square.D1;
+                if (my_color == Side.WHITE)     square_to = Square.D1;
+                else                            square_to = Square.E8;
                 break;
             case R.id.R74:
-                square_to = Square.E1;
+                if (my_color == Side.WHITE)     square_to = Square.E1;
+                else                            square_to = Square.D8;
                 break;
             case R.id.R75:
-                square_to = Square.F1;
+                if (my_color == Side.WHITE)     square_to = Square.F1;
+                else                            square_to = Square.C8;
                 break;
             case R.id.R76:
-                square_to = Square.G1;
+                if (my_color == Side.WHITE)     square_to = Square.G1;
+                else                            square_to = Square.B8;
                 break;
             case R.id.R77:
-                square_to = Square.H1;
+                if (my_color == Side.WHITE)     square_to = Square.H1;
+                else                            square_to = Square.A8;
                 break;
         }
 
@@ -519,7 +610,6 @@ public class ChessActivity extends AppCompatActivity
 
             // si llegue aca, la nueva seleccion no es un movimiento de la seleccion anterior
             // lo analizo como un movimiento nuevo
-
             analizeNewSelection();
         }
     }
@@ -529,8 +619,6 @@ public class ChessActivity extends AppCompatActivity
 
     private void analizeNewSelection()
     {
-        my_color = board.getSideToMove();
-
         // si la seleccion es un lugar vacío o una pieza del oponente, me voy
         if (board.getPiece(square_to) == Piece.NONE)                return;
         if (board.getPiece(square_to).getPieceSide() != my_color)   return;
@@ -538,7 +626,15 @@ public class ChessActivity extends AppCompatActivity
 
         square_from = square_to;
         resetColor();
-        DisplayBoardBackground[square_from.ordinal()/8][square_from.ordinal()%8].setBackgroundResource(R.color.colorSelected);
+
+        if (my_color == Side.WHITE)
+        {
+            DisplayBoardBackground[square_from.ordinal()/8][square_from.ordinal()%8].setBackgroundResource(R.color.colorSelected);
+        }
+        else
+        {
+            DisplayBoardBackground[7-square_from.ordinal()/8][7-square_from.ordinal()%8].setBackgroundResource(R.color.colorSelected);
+        }
 
         // obtengo los movimientos posibles para la pieza seleccionada
         getPossibleMoves();
@@ -593,7 +689,15 @@ public class ChessActivity extends AppCompatActivity
         if ( board.isKingAttacked() )
         {
             king_attacked_square = board.getKingSquare(my_color);
-            DisplayBoardBackground[king_attacked_square.ordinal()/8][king_attacked_square.ordinal()%8].setBackgroundResource(R.color.colorKingInDanger);
+
+            if (my_color == Side.WHITE)
+            {
+                DisplayBoardBackground[king_attacked_square.ordinal()/8][king_attacked_square.ordinal()%8].setBackgroundResource(R.color.colorKingInDanger);
+            }
+            else
+            {
+                DisplayBoardBackground[7-king_attacked_square.ordinal()/8][7-king_attacked_square.ordinal()%8].setBackgroundResource(R.color.colorKingInDanger);
+            }
         }
     }
 
@@ -609,13 +713,28 @@ public class ChessActivity extends AppCompatActivity
         for( int i = 0 ; i < possible_moves.size() ; i++ )
         {
             allowed_square = possible_moves.get(i).getTo();
+
             if(board.getPiece(allowed_square) == null)
             {
-                DisplayBoardBackground[allowed_square.ordinal()/8][allowed_square.ordinal()%8].setBackgroundResource(R.color.colorPositionAvailable);
+                if (my_color == Side.WHITE)
+                {
+                    DisplayBoardBackground[allowed_square.ordinal()/8][allowed_square.ordinal()%8].setBackgroundResource(R.color.colorPositionAvailable);
+                }
+                else
+                {
+                    DisplayBoardBackground[7-allowed_square.ordinal()/8][7-allowed_square.ordinal()%8].setBackgroundResource(R.color.colorPositionAvailable);
+                }
             }
             else
             {
-                DisplayBoardBackground[allowed_square.ordinal()/8][allowed_square.ordinal()%8].setBackgroundResource(R.color.colorDanger);
+                if (my_color == Side.WHITE)
+                {
+                    DisplayBoardBackground[allowed_square.ordinal()/8][allowed_square.ordinal()%8].setBackgroundResource(R.color.colorDanger);
+                }
+                else
+                {
+                    DisplayBoardBackground[7-allowed_square.ordinal()/8][7-allowed_square.ordinal()%8].setBackgroundResource(R.color.colorDanger);
+                }
             }
         }
     }
