@@ -5,8 +5,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
-import android.widget.GridLayout;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.github.bhlangonijr.chesslib.Board;
@@ -18,8 +18,6 @@ import com.github.bhlangonijr.chesslib.move.MoveGenerator;
 import com.github.bhlangonijr.chesslib.move.MoveGeneratorException;
 import com.github.bhlangonijr.chesslib.move.MoveList;
 import com.jwang123.flagkit.FlagKit;
-
-import java.util.ArrayList;
 
 public class ChessActivity extends AppCompatActivity
 {
@@ -37,23 +35,27 @@ public class ChessActivity extends AppCompatActivity
     private ImageView ImageView_profile_flag;
     private Button Button_draw;
     private Button Button_surrender;
-    private GridLayout GridBackground;
-    private GridLayout GridBoard;
+    private ImageView ImageView_pawn_queen;
+    private ImageView ImageView_pawn_rook;
+    private ImageView ImageView_pawn_bishop;
+    private ImageView ImageView_pawn_knight;
+    private LinearLayout LinearLayout_pawn_chioces;
 
     // tablero
-    public Board board = new Board();
+    private Board board = new Board();
 
-    public Square square_to;
-    public Square square_from;
-    public MoveList possible_moves;
+    private Square square_to;
+    private Square square_from;
+    private MoveList possible_moves;
 
-    public TextView[][] DisplayBoard = new TextView[8][8];
-    public TextView[][] DisplayBoardBackground = new TextView[8][8];
+    private TextView[][] DisplayBoard = new TextView[8][8];
+    private TextView[][] DisplayBoardBackground = new TextView[8][8];
 
-    public Boolean piece_selected = false;
-    public Side my_color;
+    private Boolean piece_selected = false;
+    private Boolean isPawnSelectingPiece = false;
+    private Side my_color;
 
-    public static final int SQUARES_QUANTITY = 64;
+    private static final int SQUARES_QUANTITY = 64;
 
 
     @Override
@@ -76,28 +78,22 @@ public class ChessActivity extends AppCompatActivity
         ImageView_oponent_flag = (ImageView) findViewById(R.id.ImageView_oponent_flag);
         ImageView_profile_image = (ImageView) findViewById(R.id.ImageView_profile_image);
         ImageView_profile_flag = (ImageView) findViewById(R.id.ImageView_profile_flag);
+        ImageView_pawn_queen = (ImageView) findViewById(R.id.ImageView_pawn_queen);
+        ImageView_pawn_rook = (ImageView) findViewById(R.id.ImageView_pawn_rook);
+        ImageView_pawn_bishop = (ImageView) findViewById(R.id.ImageView_pawn_bishop);
+        ImageView_pawn_knight = (ImageView) findViewById(R.id.ImageView_pawn_knight);
+
+        LinearLayout_pawn_chioces = (LinearLayout) findViewById(R.id.LinearLayout_pawn_chioces);
 
         Button_draw = (Button) findViewById(R.id.Button_draw);
         Button_surrender = (Button) findViewById(R.id.Button_surrender);
-
-        GridBackground = (GridLayout) findViewById(R.id.GridBackground);
-        GridBoard = (GridLayout) findViewById(R.id.GridBoard);
-
-        initializeBoard();
-
-        // ajusto el tamaño del tablero al dispositivo
-        int height = this.getResources().getDisplayMetrics().heightPixels*60/100;
-        int width = this.getResources().getDisplayMetrics().widthPixels/10;
-
-        //GridBackground.layout();
-
 
 
 
 
         // valores que hay que pasar (AGREGAR DESDE LA LLAMADA)
         TextView_oponent_name.setText("leandro ariel bonn");
-        TextView_oponent_elo.setText( "1206" );
+        TextView_oponent_elo.setText( "1210" );
         TextView_oponent_timer.setText("10:51" );
         TextView_profile_name.setText( "franco kenji" );
         TextView_profile_elo.setText( "1210" );
@@ -106,11 +102,18 @@ public class ChessActivity extends AppCompatActivity
         ImageView_profile_image.setImageDrawable(getDrawable(R.drawable.bking));
         ImageView_oponent_image.setImageDrawable(getDrawable(R.drawable.wking));
 
+        my_color = Side.WHITE;
+
         /*
         Librería de iconos de banderas: https://github.com/WANGjieJacques/flagkit
          */
         ImageView_profile_flag.setImageDrawable(FlagKit.drawableWithFlag(ChessActivity.this, "ar"));
         ImageView_oponent_flag.setImageDrawable(FlagKit.drawableWithFlag(ChessActivity.this, "ar"));
+
+
+
+
+        initializeBoard();
     }
 
 
@@ -265,7 +268,15 @@ public class ChessActivity extends AppCompatActivity
         // imprime en pantalla las piezas almacenadas en "Board"
         Piece p;
 
+
+
+
+        ///////////////////////////////////////////////////// SOLO PARA TESTEO ( ELIMINAR )
         my_color = board.getSideToMove();
+        /////////////////////////////////////////////////////
+
+
+
 
         for (int row = 0; row < 8; row++)
         {
@@ -312,6 +323,9 @@ public class ChessActivity extends AppCompatActivity
 
     public void onClick(View v)
     {
+        // si estoy eligiendo el cambio de pieza con el peón, ignoro al tablero
+        if (isPawnSelectingPiece)           return;
+
         // lectura de los clicks de las casillas y procesamiento
         my_color = board.getSideToMove();
 
@@ -591,7 +605,6 @@ public class ChessActivity extends AppCompatActivity
         {
             // dejo de mostrar los movimientos posibles y saco la seleccion de la pieza
             piece_selected = false;
-            resetColor();
 
 
             // veo si la nueva seleccion es uno de los movimientos posibles
@@ -599,9 +612,14 @@ public class ChessActivity extends AppCompatActivity
             {
                 if (possible_moves.get(i).getTo() == square_to)     // si la casilla seleccionada es válida, hago el movimiento
                 {
-                    // hago el movimiento
-                    board.doMove(new Move(square_from,square_to));
-                    setBoard();
+                    // si el movimiento no es por un peón que llego al final, lo hago
+                    // el movimiento del peón con cambio de pieza  se hace en pawnChoice() con la ventana al usuario
+                    if ( ! isPawnFinish() )
+                    {
+                        resetColor();
+                        board.doMove(new Move(square_from,square_to));
+                        setBoard();
+                    }
 
                     return;
                 }
@@ -714,12 +732,11 @@ public class ChessActivity extends AppCompatActivity
         {
             allowed_square = possible_moves.get(i).getTo();
 
-            if(board.getPiece(allowed_square) == null)
+            if(board.getPiece(allowed_square) == Piece.NONE)
             {
                 if (my_color == Side.WHITE)
                 {
-                    DisplayBoardBackground[allowed_square.ordinal()/8][allowed_square.ordinal()%8].setBackgroundResource(R.color.colorPositionAvailable);
-                }
+                    DisplayBoardBackground[allowed_square.ordinal()/8][allowed_square.ordinal()%8].setBackgroundResource(R.color.colorPositionAvailable);}
                 else
                 {
                     DisplayBoardBackground[7-allowed_square.ordinal()/8][7-allowed_square.ordinal()%8].setBackgroundResource(R.color.colorPositionAvailable);
@@ -757,5 +774,93 @@ public class ChessActivity extends AppCompatActivity
                 else                DisplayBoardBackground[i / 8][i % 8].setBackgroundResource(R.color.colorBoardDark);
             }
         }
+    }
+
+
+
+
+    private boolean isPawnFinish()
+    {
+        // analizo si el peón llego al final, para elegir la nueva pieza
+
+        // si la pieza movida no fue un peón, me voy
+        if ((board.getPiece(square_from) != Piece.BLACK_PAWN) && (board.getPiece(square_from) != Piece.WHITE_PAWN))     return false;
+
+
+        if (my_color == Side.WHITE)
+        {
+            for ( int i = SQUARES_QUANTITY - 8 ; i < SQUARES_QUANTITY ; i++ )
+            {
+                if (square_to == Square.squareAt(i))
+                {
+                    LinearLayout_pawn_chioces.setVisibility(View.VISIBLE);
+
+                    ImageView_pawn_queen.setImageDrawable(getDrawable(R.drawable.wqueen));
+                    ImageView_pawn_rook.setImageDrawable(getDrawable(R.drawable.wrook));
+                    ImageView_pawn_bishop.setImageDrawable(getDrawable(R.drawable.wbishop));
+                    ImageView_pawn_knight.setImageDrawable(getDrawable(R.drawable.wknight));
+
+                    isPawnSelectingPiece = true;
+
+                    return true;
+                }
+            }
+        }
+        else
+        {
+            for ( int i = 0 ; i < 8 ; i++ )
+            {
+                if (square_to == Square.squareAt(i))
+                {
+                    LinearLayout_pawn_chioces.setVisibility(View.VISIBLE);
+
+                    ImageView_pawn_queen.setImageDrawable(getDrawable(R.drawable.bqueen));
+                    ImageView_pawn_rook.setImageDrawable(getDrawable(R.drawable.brook));
+                    ImageView_pawn_bishop.setImageDrawable(getDrawable(R.drawable.bbishop));
+                    ImageView_pawn_knight.setImageDrawable(getDrawable(R.drawable.bknight));
+
+                    isPawnSelectingPiece = true;
+
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+
+
+
+    public void pawnChoice(View v)
+    {
+        // cambio al peón que llego al final por la pieza elegida
+
+        switch (v.getId())
+        {
+            case R.id.ImageView_pawn_queen :
+                if (my_color == Side.WHITE)     board.doMove(new Move(square_from,square_to,Piece.WHITE_QUEEN));
+                else                            board.doMove(new Move(square_from,square_to,Piece.BLACK_QUEEN));
+                break;
+
+            case R.id.ImageView_pawn_rook :
+                if (my_color == Side.WHITE)     board.doMove(new Move(square_from,square_to,Piece.WHITE_ROOK));
+                else                            board.doMove(new Move(square_from,square_to,Piece.BLACK_ROOK));
+                break;
+
+            case R.id.ImageView_pawn_bishop :
+                if (my_color == Side.WHITE)     board.doMove(new Move(square_from,square_to,Piece.WHITE_BISHOP));
+                else                            board.doMove(new Move(square_from,square_to,Piece.BLACK_BISHOP));
+                break;
+
+            case R.id.ImageView_pawn_knight :
+                if (my_color == Side.WHITE)     board.doMove(new Move(square_from,square_to,Piece.WHITE_KNIGHT));
+                else                            board.doMove(new Move(square_from,square_to,Piece.BLACK_KNIGHT));
+                break;
+        }
+
+        setBoard();
+        LinearLayout_pawn_chioces.setVisibility(View.INVISIBLE);
+        isPawnSelectingPiece = false;
     }
 }
